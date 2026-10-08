@@ -11,6 +11,10 @@ from shop_contracts.events import topic_for, validate_event
 Handler = Callable[[dict[str, Any]], None]
 
 
+class EventNotDelivered(Exception):
+    """Kafka did not confirm the event within the delivery timeout."""
+
+
 class EventPublisher(Protocol):
     def publish(self, envelope: dict[str, Any], key: str) -> None: ...
 
@@ -32,17 +36,37 @@ IPV4_ONLY = {"broker.address.family": "v4"}
 
 
 class KafkaEventPublisher:
-    def __init__(self, bootstrap_servers: str) -> None:
+    def __init__(self, bootstrap_servers: str, delivery_timeout_ms: int = 5000) -> None:
         from confluent_kafka import Producer
 
-        self._producer = Producer({"bootstrap.servers": bootstrap_servers, **IPV4_ONLY})
+        self._timeout_s = delivery_timeout_ms / 1000
+        self._producer = Producer(
+            {
+                "bootstrap.servers": bootstrap_servers,
+                "message.timeout.ms": delivery_timeout_ms,
+                **IPV4_ONLY,
+            }
+        )
 
     def publish(self, envelope: dict[str, Any], key: str) -> None:
+        """Send the event and wait until Kafka confirms it. Raise EventNotDelivered otherwise."""
         validate_event(envelope)
+        failures: list[str] = []
+
+        def on_delivery(error: object, _message: object) -> None:
+            if error is not None:
+                failures.append(str(error))
+
         self._producer.produce(
-            topic_for(envelope["type"]), key=key, value=json.dumps(envelope).encode()
+            topic_for(envelope["type"]),
+            key=key,
+            value=json.dumps(envelope).encode(),
+            on_delivery=on_delivery,
         )
-        self._producer.flush(10)
+        still_queued = self._producer.flush(self._timeout_s + 1)
+        if failures or still_queued:
+            reason = failures[0] if failures else "no confirmation from Kafka"
+            raise EventNotDelivered(f"{envelope['type']} {envelope['event_id']}: {reason}")
 
 
 def run_consumer(bootstrap_servers: str, group_id: str, handlers: Mapping[str, Handler]) -> None:
