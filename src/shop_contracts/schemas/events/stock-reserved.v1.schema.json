@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StockReserved v1",
+  "description": "Published by inventory-service when every line of an order is reserved.",
+  "type": "object",
+  "required": ["event_id", "type", "version", "occurred_at", "data"],
+  "properties": {
+    "event_id": {"type": "string", "format": "uuid"},
+    "type": {"const": "StockReserved"},
+    "version": {"const": 1},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "data": {
+      "type": "object",
+      "required": ["order_id", "total_cents"],
+      "properties": {
+        "order_id": {"type": "string"},
+        "total_cents": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

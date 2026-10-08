@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PaymentCaptured v1",
+  "description": "Published by payments-service when the payment for an order is captured.",
+  "type": "object",
+  "required": ["event_id", "type", "version", "occurred_at", "data"],
+  "properties": {
+    "event_id": {"type": "string", "format": "uuid"},
+    "type": {"const": "PaymentCaptured"},
+    "version": {"const": 1},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "data": {
+      "type": "object",
+      "required": ["order_id", "payment_id", "amount_cents"],
+      "properties": {
+        "order_id": {"type": "string"},
+        "payment_id": {"type": "string"},
+        "amount_cents": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

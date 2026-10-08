@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StockRejected v1",
+  "description": "Published by inventory-service when a line of an order cannot be reserved.",
+  "type": "object",
+  "required": ["event_id", "type", "version", "occurred_at", "data"],
+  "properties": {
+    "event_id": {"type": "string", "format": "uuid"},
+    "type": {"const": "StockRejected"},
+    "version": {"const": 1},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "data": {
+      "type": "object",
+      "required": ["order_id", "sku", "reason"],
+      "properties": {
+        "order_id": {"type": "string"},
+        "sku": {"type": "string"},
+        "reason": {"enum": ["unknown sku", "insufficient stock"]}
+      }
+    }
+  }
+}
