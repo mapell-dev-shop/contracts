@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PaymentRefunded v1",
+  "description": "Published by payments-service when the captured payment of a cancelled order is refunded. Published again when the order is cancelled again.",
+  "type": "object",
+  "required": ["event_id", "type", "version", "occurred_at", "data"],
+  "properties": {
+    "event_id": {"type": "string", "format": "uuid"},
+    "type": {"const": "PaymentRefunded"},
+    "version": {"const": 1},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "data": {
+      "type": "object",
+      "required": ["order_id", "payment_id", "amount_cents"],
+      "properties": {
+        "order_id": {"type": "string"},
+        "payment_id": {"type": "string"},
+        "amount_cents": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

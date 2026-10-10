@@ -49,3 +49,30 @@ def test_unknown_event_type_is_refused() -> None:
 def test_topic_names_follow_the_convention() -> None:
     assert topic_for("OrderPlaced") == "shop.orders.order-placed.v1"
     assert all(topic.startswith("shop.") and topic.endswith(".v1") for topic, _ in EVENTS.values())
+
+
+def test_order_cancelled_carries_the_order_id() -> None:
+    validate_event(new_envelope("OrderCancelled", {"order_id": "o-1"}))
+    assert topic_for("OrderCancelled") == "shop.orders.order-cancelled.v1"
+
+
+def test_order_cancelled_without_an_order_id_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        validate_event(new_envelope("OrderCancelled", {}))
+
+
+def test_payment_refunded_carries_the_payment_and_amount() -> None:
+    validate_event(
+        new_envelope(
+            "PaymentRefunded", {"order_id": "o-1", "payment_id": "p-1", "amount_cents": 5000}
+        )
+    )
+    assert topic_for("PaymentRefunded") == "shop.payments.payment-refunded.v1"
+
+
+def test_payment_refunded_with_a_negative_amount_is_rejected() -> None:
+    envelope = new_envelope(
+        "PaymentRefunded", {"order_id": "o-1", "payment_id": "p-1", "amount_cents": -1}
+    )
+    with pytest.raises(ValidationError):
+        validate_event(envelope)

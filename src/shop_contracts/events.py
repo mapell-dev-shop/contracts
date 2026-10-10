@@ -16,6 +16,8 @@ EVENTS: dict[str, tuple[str, str]] = {
     "StockRejected": ("shop.inventory.stock-rejected.v1", "stock-rejected.v1.schema.json"),
     "PaymentCaptured": ("shop.payments.payment-captured.v1", "payment-captured.v1.schema.json"),
     "PaymentFailed": ("shop.payments.payment-failed.v1", "payment-failed.v1.schema.json"),
+    "OrderCancelled": ("shop.orders.order-cancelled.v1", "order-cancelled.v1.schema.json"),
+    "PaymentRefunded": ("shop.payments.payment-refunded.v1", "payment-refunded.v1.schema.json"),
 }
 
 
